@@ -1,0 +1,16 @@
+# Intermedios de la extracción de PDF: se regeneran con buscador/actualizar.sh
+Precios/buscador/.tmp/
+
+# Paquete para subir a Netlify: se regenera desde para-netlify/
+Precios/inventario-netlify.zip
+
+# Exportación antigua del buscador. Tiene copias divergentes de app_template.html
+# y parse.awk que ya no se mantienen; la fuente canónica es Precios/buscador/.
+# Se deja fuera del repo para que nadie edite el archivo equivocado.
+Precios/InventarioRepuestos-PacificTech/
+Precios/InventarioRepuestos-PacificTech.zip
+
+# Capturas del catálogo web de Canguro (17 MB). Son la referencia desde la que
+# se transcribieron los datos/can_*.jsonl, pero ningún script las lee. Quedan
+# en el disco y fuera del repo: con ellas pesa 25 MB, sin ellas 8 MB.
+Precios/canguropanama.com-container-catalog-fpscreenshot*.pdf

@@ -1,0 +1,17 @@
+{
+  "version": "0.0.1",
+  "configurations": [
+    {
+      "name": "buscador",
+      "runtimeExecutable": "python3",
+      "runtimeArgs": ["-m", "http.server", "8765", "--directory", "Precios/buscador"],
+      "port": 8765
+    },
+    {
+      "name": "netlify",
+      "runtimeExecutable": "python3",
+      "runtimeArgs": ["-m", "http.server", "8766", "--directory", "Precios/para-netlify"],
+      "port": 8766
+    }
+  ]
+}

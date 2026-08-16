@@ -1,0 +1,9 @@
+{
+  "permissions": {
+    "allow": [
+      "PowerShell(Get-ChildItem -File | Select-Object Name, @{N='SizeMB';E={[math]::Round\\($_.Length/1MB,2\\)}} | Format-Table -AutoSize)",
+      "PowerShell(python -c \"import pdfplumber; print\\('ok'\\)\")",
+      "PowerShell($cmds = 'py','python3','node','pdftotext'; foreach \\($c in $cmds\\) { $x = Get-Command $c -ErrorAction SilentlyContinue; if \\($x\\) { Write-Output \"$c -> $\\($x.Source\\)\" } else { Write-Output \"$c -> NO\" } })"
+    ]
+  }
+}
