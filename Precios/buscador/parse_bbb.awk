@@ -13,6 +13,7 @@
 # Uso: LC_ALL=C gawk -v SEC="PIN DE CARGA" -f parse_bbb.awk layout.txt table.txt \
 #        > items.jsonl 2> qa.log
 
+BEGIN { MAX_PRICE = (MAX_PRICE == "" ? 500 : MAX_PRICE + 0) }
 function key(s) { gsub(/ /, "", s); return s }
 function jesc(s) { gsub(/\\/, "\\\\", s); gsub(/"/, "\\\"", s); return s }
 function limpia(s) {
@@ -55,7 +56,7 @@ NR == FNR {
 
   if (desc == "") { printf "L%d: DESCARTADO sin descripcion (cod=%s)\n", FNR, cod > "/dev/stderr"; next }
   if (precio + 0 <= 0) { printf "L%d: PRECIO CERO (agotado?) [%s] cod=%s\n", FNR, desc, cod > "/dev/stderr"; next }
-  if (precio + 0 > 500) { printf "L%d: PRECIO RARO %s [%s]\n", FNR, precio, desc > "/dev/stderr" }
+  if (precio + 0 > MAX_PRICE) { printf "L%d: PRECIO RARO %s [%s]\n", FNR, precio, desc > "/dev/stderr" }
 
   if (cod in VISTO) { printf "L%d: CODIGO REPETIDO %s [%s]\n", FNR, cod, desc > "/dev/stderr"; next }
   VISTO[cod] = 1

@@ -7,6 +7,9 @@ BEGIN {
   nc = split("NEGRO BLANCO AZUL ROJO VERDE DORADO MORADO ROSADO AMARILLO GRIS SLIVER SILVER CELESTE NARANJA MARRON MARRÓN TORNASOL FUSIA FUCSIA VIOLETA ROSA PLATEADO TITANIO GRAFITO VINO TURQUESA", ca, " ")
   for (i=1;i<=nc;i++) COLORV[ca[i]] = 1
   nl = 0; np = 1
+  # Tope de precio plausible. Debe coincidir con el de validar_jsonl.awk y
+  # parse_bbb.awk; se centraliza desde actualizar.sh con MAX_PRECIO.
+  MAX_PRICE = (MAX_PRICE == "" ? 500 : MAX_PRICE + 0)
 }
 function squeeze(s) { gsub(/[ \t]+/, " ", s); gsub(/^ | $/, "", s); return s }
 function jesc(s) { gsub(/\\/, "\\\\", s); gsub(/"/, "\\\"", s); return s }
@@ -147,7 +150,7 @@ function emit(col,   m, q, c, p) {
   eSec[ne] = cursecfor(col); eMod[ne] = m; eQual[ne] = q; eCol[ne] = c; ePrec[ne] = p; eBad[ne] = 0
   if (m == "") { eBad[ne] = 1; printf "L%d: DESCARTADO sin modelo (cal=%s col=%s p=%s)\n", CURLN, q, c, p > "/dev/stderr" }
   else if (p == "") { eBad[ne] = 1; printf "L%d: SIN PRECIO: [%s] sec=%s\n", CURLN, m, cursecfor(col) > "/dev/stderr" }
-  else if (p + 0 <= 0 || p + 0 > 500) { eBad[ne] = 1; printf "L%d: PRECIO RARO %s: [%s]\n", CURLN, p, m > "/dev/stderr" }
+  else if (p + 0 <= 0 || p + 0 > MAX_PRICE) { eBad[ne] = 1; printf "L%d: PRECIO RARO %s: [%s]\n", CURLN, p, m > "/dev/stderr" }
   lastIdx[col] = ne
   clearcol(col)
 }
