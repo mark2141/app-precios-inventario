@@ -41,8 +41,12 @@ extrae() { # $1=pdf  $2=clave  $3=secciones
   local pdf="$PDFS/$1" key="$2" sec="$3"
   pdftotext "$PDF_TABLE_OPT" -enc UTF-8 "$pdf" "$TMP/$key.txt"
   "$AWK_BIN" -v SECTIONS="$sec" -f "$DIR/parse.awk" "$TMP/$key.txt" > "$TMP/$key.jsonl" 2> "$TMP/$key.qa.log"
+  grep -q '^META FECHA ' "$TMP/$key.qa.log" || {
+    echo "La lista HEM $pdf no contiene una fecha reconocible." >&2; exit 1
+  }
   local prob; prob=$(grep -cvE '^META|ANEXADO' "$TMP/$key.qa.log" || true)
   echo "  HEM $key: $(wc -l < "$TMP/$key.jsonl") repuestos, $prob problemas (ver $TMP/$key.qa.log)"
+  [ "$prob" -eq 0 ] || { echo "Se aborta por problemas de extracción en HEM $key." >&2; exit 1; }
 }
 
 echo "Extrayendo listas de HEM Movil..."
@@ -53,37 +57,23 @@ extrae "HEM-PRECIOS DE FLEXIBLES.pdf" flex "$SEC_FLEX"
 
 # ---- Max Movil (identificador interno: BBB) ---------------------------------
 # Un PDF por tipo de repuesto en Precios/pdfs-bbb/. Para agregar una lista nueva
-# basta con copiar el PDF ahi y sumar una linea a esta tabla: el nombre del
-# archivo (sin .pdf) a la izquierda, la seccion a la derecha. Las secciones se
-# llaman igual que las de HEM a proposito, para que la app las clasifique igual.
+# basta con copiar el PDF ahi y sumar una linea a datos/bbb_map.txt: el nombre
+# del archivo (sin .pdf) a la izquierda, la seccion a la derecha. Las secciones
+# se llaman igual que las de HEM a proposito, para que la app las clasifique igual.
 # Excepcion: "FLEX DE PLACA" NO se llama "FPC DE PLACA" como en HEM, porque no
 # es la misma pieza (ver el bloque de cruces al final del archivo).
-BBB_MAP="
-LISTA LCD 2026 - LCD BBB (1)|PANTALLA
-FLEX DE CARGA - CARGA BBB|FLEX DE CARGA
-PIN DE CARGA - PIN CARGA BBB|PIN DE CARGA
-FLEX POWER - POWER VOLUMEN BBB|FLEX DE POWER Y VOLUMEN
-BOTON FISICO - BOTON FISICO BBB|BOTON FISICO DE POWER Y VOLUMEN
-FLEX POWER - POWER HUELLA BBB|FLEX DE HUELLA
-FLEX CAMARA - FLEX CAMARA FRONTAL BBB|FLEX DE CAMARA FRONTAL
-FLEX CAMARA - FLEX CAMARA TRASERA BBB|FLEX DE CAMARA TRASERA
-VIDRIOS DE CAMARAS - VIDRIO DE CAMARA BBB|LENTE DE CAMARA
-BUZZER - BUZZER BBB|BUZZER/TIMBRE/ALTAVOZ
-FLEX AURICULAR - FLEX AURICULAR BBB|FLEX DE AURICULAR
-FLEX ANTENA - FLEX ANTENA BBB|FLEX ANTENA SEÑAL
-FLEX DE PLACA - PLACA BBB|FLEX DE PLACA
-BANDEJA DE SIM - SIM BBB|BANDEJA DE CHIP
-"
+BBB_MAP_FILE="$DIR/datos/bbb_map.txt"
+[ -s "$BBB_MAP_FILE" ] || { echo "Falta el mapa de Max Movil: $BBB_MAP_FILE" >&2; exit 1; }
 
 echo "Extrayendo listas de Max Movil..."
 TB="$TMP/bbb"; mkdir -p "$TB"; rm -f "$TB"/*.jsonl "$TB"/*.qa.log
-BBB_SIN_MAPEO=0
+BBB_SIN_MAPEO=0; BBB_SIN_FECHA=0; BBB_PROBLEMAS=0
 for pdf in "$PDFS"/pdfs-bbb/*.pdf; do
   [ -e "$pdf" ] || { echo "  (no hay PDFs en $PDFS/pdfs-bbb)"; break; }
   b=$(basename "$pdf" .pdf)
-  sec=$(printf '%s\n' "$BBB_MAP" | "$AWK_BIN" -F'|' -v n="$b" '$1==n{print $2; exit}')
+  sec=$("$AWK_BIN" -F'|' -v n="$b" '$0 !~ /^#/ && $1==n{print $2; exit}' "$BBB_MAP_FILE")
   if [ -z "$sec" ]; then
-    echo "  !! SIN MAPEO, se omite: $b   (agregalo a BBB_MAP en este script)"
+    echo "  !! SIN MAPEO, se omite: $b   (agrégalo a $BBB_MAP_FILE)"
     BBB_SIN_MAPEO=$((BBB_SIN_MAPEO+1)); continue
   fi
   # La extracción tabular define las filas y -layout sirve de diccionario para
@@ -92,13 +82,31 @@ for pdf in "$PDFS"/pdfs-bbb/*.pdf; do
   pdftotext "$PDF_TABLE_OPT" -enc UTF-8 "$pdf" "$TB/$b.tab.txt"
   "$AWK_BIN" -v SEC="$sec" -f "$DIR/parse_bbb.awk" "$TB/$b.lay.txt" "$TB/$b.tab.txt" \
     > "$TB/$b.jsonl" 2> "$TB/$b.qa.log"
+  if ! grep -q '^META FECHA ' "$TB/$b.qa.log"; then
+    echo "  !! SIN FECHA reconocible: $b"
+    BBB_SIN_FECHA=$((BBB_SIN_FECHA+1))
+  fi
   prob=$(grep -cvE '^META|SIN ESPACIADO|PRECIO CERO' "$TB/$b.qa.log" || true)
+  BBB_PROBLEMAS=$((BBB_PROBLEMAS+prob))
   printf '  Max Movil %-42s %5s repuestos, %s problemas\n' "$sec" "$(wc -l < "$TB/$b.jsonl")" "$prob"
 done
+[ "$BBB_SIN_MAPEO" -eq 0 ] || {
+  echo "Se aborta la actualización: hay $BBB_SIN_MAPEO PDF(s) de Max Movil sin mapeo." >&2
+  exit 1
+}
+[ "$BBB_SIN_FECHA" -eq 0 ] || {
+  echo "Se aborta la actualización: hay $BBB_SIN_FECHA PDF(s) de Max Movil sin fecha." >&2
+  exit 1
+}
+[ "$BBB_PROBLEMAS" -eq 0 ] || {
+  echo "Se aborta la actualización: Max Movil reportó $BBB_PROBLEMAS problema(s) de extracción." >&2
+  exit 1
+}
 cat "$TB"/*.jsonl > "$TB/bbb.jsonl" 2>/dev/null || : > "$TB/bbb.jsonl"
-# la fecha mas reciente entre todas las listas de Max Movil
+# Se usa la fecha mas antigua entre todas las listas: una sola lista vieja debe
+# hacer que el estado global de Max Movil se considere viejo.
 FBBB=$(grep -h 'META FECHA' "$TB"/*.qa.log 2>/dev/null | sed 's/META FECHA //; s/\r//' \
-       | awk -F/ '{printf "%04d.%02d.%02d\n", $3, $2, $1}' | sort -r | head -1)
+       | awk -F/ '{printf "%04d.%02d.%02d\n", $3, $2, $1}' | sort | head -1)
 [ -z "$FBBB" ] && FBBB="0000.00.00"
 echo "  Max Movil total: $(wc -l < "$TB/bbb.jsonl") repuestos (lista del $FBBB)"
 
@@ -127,9 +135,21 @@ case "$FCAN" in
   *) echo "Fecha de Canguro invalida: '$FCAN' (se espera AAAA.MM.DD)" >&2; exit 1 ;;
 esac
 
+# Los textos de proveedores se incrustan dentro de un <script>. Convertir estos
+# caracteres a escapes Unicode evita que una descripción como </script> pueda
+# cerrar el bloque y alterar el HTML generado.
+js_safe() {
+  "$AWK_BIN" '{
+    gsub(/&/, "\\u0026")
+    gsub(/</, "\\u003c")
+    gsub(/>/, "\\u003e")
+    print
+  }' "$@"
+}
+
 {
   printf 'const RAW={'
-  for x in bat pan car flex; do printf '"%s":[' "$x"; paste -sd, "$TMP/$x.jsonl"; printf '],'; done
+  for x in bat pan car flex; do printf '"%s":[' "$x"; js_safe "$TMP/$x.jsonl" | paste -sd,; printf '],'; done
   printf '"_end":1};\n'
   printf 'const FECHAS={'
   for x in bat pan car flex; do
@@ -139,11 +159,11 @@ esac
   printf '"_end":""};\n'
   printf 'const FECHA_CANGURO="%s";\n' "$FCAN"
   printf 'const CANGURO=['
-  cat "${CAN_FILES[@]}" | paste -sd,
+  js_safe "${CAN_FILES[@]}" | paste -sd,
   printf '];\n'
   printf 'const FECHA_BBB="%s";\n' "$FBBB"
   printf 'const BBB=['
-  paste -sd, "$TB/bbb.jsonl"
+  js_safe "$TB/bbb.jsonl" | paste -sd,
   printf '];\n'
 } > "$TMP/data.js"
 
