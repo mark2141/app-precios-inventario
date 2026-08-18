@@ -20,13 +20,13 @@
 :root{
   color-scheme: light;
   --navy:#00387C; --blue:#006EF2; --cyan:#4DC4FF;
-  --bg:#F3F7FC; --surface:#FFFFFF; --ink:#0B2544; --ink2:#5B769B;
+  --bg:#F3F7FC; --surface:#FFFFFF; --ink:#0B2544; --ink2:#4F6B91;
   --line:#DBE6F3; --line2:#EDF3FA;
   --accent:#006EF2; --accent-ink:#FFFFFF; --chip:#E8F0FB;
   --warn:#B45309; --good:#0B7A55; --good-bg:#DDF2EA;
   /* Un color por distribuidor. El violeta se sale de la paleta azul a proposito:
      con tres distribuidores hay que poder distinguirlos de un vistazo. */
-  --hem:#00387C; --hem-bg:#E2EBF7; --can:#0B7A9E; --can-bg:#DDF0FA;
+  --hem:#00387C; --hem-bg:#E2EBF7; --can:#096B8D; --can-bg:#DDF0FA;
   --bbb:#6B4BC4; --bbb-bg:#EDE8FA;
   --shadow:0 1px 2px rgba(0,56,124,.06), 0 1px 8px rgba(0,56,124,.05);
 }
@@ -34,6 +34,8 @@
 html,body{margin:0;padding:0}
 body{background:var(--bg);color:var(--ink);font:16px/1.45 system-ui,-apple-system,"Segoe UI",Roboto,sans-serif}
 .mono{font-family:ui-monospace,SFMono-Regular,Menlo,Consolas,monospace;font-variant-numeric:tabular-nums}
+.sr-only{position:absolute;width:1px;height:1px;padding:0;margin:-1px;overflow:hidden;clip:rect(0,0,0,0);
+  white-space:nowrap;border:0}
 
 header{position:sticky;top:0;z-index:10;background:var(--bg);border-bottom:1px solid var(--line);padding:10px 12px 0}
 .brand{display:flex;align-items:center;gap:11px;margin:0 2px 9px}
@@ -45,7 +47,7 @@ header{position:sticky;top:0;z-index:10;background:var(--bg);border-bottom:1px s
 .searchrow{display:flex;gap:8px}
 .searchrow input{flex:1;font-size:17px;padding:11px 14px;border:1.5px solid var(--line);border-radius:10px;
   background:var(--surface);color:var(--ink);outline:none;min-width:0}
-.searchrow input::placeholder{color:#8CA3BF}
+.searchrow input::placeholder{color:#5D7595}
 .searchrow input:focus{border-color:var(--blue);box-shadow:0 0 0 3px rgba(0,110,242,.13)}
 .searchrow button{font-size:18px;padding:0 13px;border:1.5px solid var(--line);border-radius:10px;
   background:var(--surface);color:var(--navy);cursor:pointer}
@@ -59,7 +61,7 @@ header{position:sticky;top:0;z-index:10;background:var(--bg);border-bottom:1px s
   background:var(--surface);color:var(--ink);cursor:pointer;white-space:nowrap}
 .chip:hover{border-color:var(--cyan)}
 .chip[aria-pressed="true"]{background:var(--blue);color:#fff;border-color:var(--blue);font-weight:600}
-.chip .c{opacity:.6;font-size:11.5px;margin-left:3px}
+.chip .c{opacity:.75;font-size:11.5px;margin-left:3px}
 .dists{display:flex;gap:6px;padding:0 2px 8px;align-items:center;flex-wrap:wrap}
 .dists .lbl{font-size:11px;color:var(--ink2);text-transform:uppercase;letter-spacing:.07em;margin-right:2px}
 .dchip{font-size:13px;padding:5px 11px;border-radius:999px;border:1px solid var(--line);background:var(--surface);
@@ -81,6 +83,12 @@ header{position:sticky;top:0;z-index:10;background:var(--bg);border-bottom:1px s
 .panel input[type=number]{width:80px;font-size:16px}
 .switch{display:inline-flex;align-items:center;gap:8px;cursor:pointer;font-size:14px;color:var(--ink)}
 .switch input{accent-color:var(--blue)}
+.statusline{display:none}
+.statusbtn{width:100%;border:1px solid var(--line);border-radius:8px;background:var(--surface);color:var(--ink2);
+  font:600 12px/1.2 inherit;padding:7px 10px;text-align:left;cursor:pointer}
+.statusbtn::after{content:"⌄";float:right;color:var(--navy)}
+.statusbtn[aria-expanded="true"]::after{content:"⌃"}
+.statusbtn.old{color:var(--warn);border-color:#E7C9A5;background:#FFF9F2}
 .fechas{display:flex;gap:11px;flex-wrap:wrap;font-size:11.5px;color:var(--ink2);padding:0 4px 8px}
 .fechas b{color:var(--navy);font-weight:600}
 .fechas .old{color:var(--warn)}
@@ -91,7 +99,7 @@ main{max-width:820px;margin:0 auto;padding:10px 12px 60px}
 .cathead .n{font-size:12px;color:var(--ink2)}
 .catnote{font-size:12.5px;color:var(--warn);margin:0 2px 6px}
 .list{background:var(--surface);border:1px solid var(--line);border-radius:12px;overflow:hidden;box-shadow:var(--shadow)}
-.grp{border-top:1px solid var(--line)}
+.grp{border-top:1px solid var(--line);content-visibility:auto;contain-intrinsic-size:auto 84px}
 .grp:first-child{border-top:none}
 .grp.dual{box-shadow:inset 3px 0 0 var(--cyan)}
 .grphead{display:flex;align-items:center;gap:8px;padding:8px 12px 0;font-size:11.5px;color:var(--navy);
@@ -110,6 +118,9 @@ main{max-width:820px;margin:0 auto;padding:10px 12px 60px}
 .badge.bbb{background:var(--bbb-bg);color:var(--bbb)}
 .badge.best{background:var(--good-bg);color:var(--good)}
 .badge.sub{background:transparent;border-color:var(--line);color:var(--ink2);font-weight:600}
+.badge.sku{background:transparent;border-color:var(--line);font-family:ui-monospace,SFMono-Regular,Menlo,Consolas,monospace;
+  font-weight:600;text-transform:none}
+.badge.stock{background:#E7F5EC;color:#17633D}
 .prices{text-align:right;flex-shrink:0}
 .pd{font-size:15.5px;font-weight:700;color:var(--navy)}
 .pv{font-size:13px;font-weight:700;color:var(--blue);margin-top:1px}
@@ -128,6 +139,33 @@ main{max-width:820px;margin:0 auto;padding:10px 12px 60px}
 .empty{text-align:center;color:var(--ink2);margin-top:40px;font-size:15px;line-height:1.6}
 footer{max-width:820px;margin:0 auto;padding:0 14px 30px;font-size:11.5px;color:var(--ink2);line-height:1.6}
 @media (min-width:700px){ .brand h1{font-size:20px} .brand img{height:50px} }
+@media (max-width:699px){
+  header{padding:7px 10px 0}
+  .brand{gap:8px;margin-bottom:6px}
+  .brand img{height:34px}
+  .brand h1{font-size:15.5px;white-space:nowrap}
+  .brand .src{display:none}
+  .brand .tot{font-size:11px}
+  body.has-results .brand{display:none}
+  .searchrow input{font-size:16px;padding:9px 11px}
+  .searchrow button{padding:0 11px}
+  .chips{padding:7px 2px 5px}
+  .chip{font-size:13px;padding:5px 10px}
+  .dists{flex-wrap:nowrap;overflow-x:auto;padding-bottom:6px}
+  .dists .lbl{flex:0 0 auto}
+  .dchip{font-size:12.5px;padding:4px 9px}
+  .subrow{padding-bottom:7px}
+  .subrow select{font-size:14px;padding:7px 9px}
+  .statusline{display:block;padding:0 2px 7px}
+  .fechas{display:none;background:var(--surface);border:1px solid var(--line);border-radius:9px;
+    margin:0 2px 7px;padding:8px 10px;gap:6px 12px}
+  .fechas.open{display:flex}
+  body.has-results .statusline,body.has-results .fechas{display:none}
+  main{padding:7px 10px 50px}
+  .summary{grid-template-columns:repeat(2,minmax(0,1fr));gap:8px;margin-top:8px}
+  .scard{padding:12px 12px 10px}
+  .item{padding:8px 10px}
+}
 </style>
 </head>
 <body>
@@ -144,7 +182,8 @@ footer{max-width:820px;margin:0 auto;padding:0 14px 30px;font-size:11.5px;color:
   <div class="searchrow">
     <input id="q" type="search" placeholder="Modelo del equipo: a52, iphone 12, redmi note 13…"
       autocomplete="off" autocapitalize="off" spellcheck="false" aria-label="Buscar repuesto por modelo">
-    <button id="gear" title="Margen de ganancia y ajustes" aria-label="Ajustes">⚙</button>
+    <button id="gear" title="Margen de ganancia y ajustes" aria-label="Ajustes"
+      aria-controls="panel" aria-expanded="false">⚙</button>
   </div>
   <div class="chips" id="chips" role="group" aria-label="Filtrar por tipo de repuesto"></div>
   <div class="dists" id="dists" role="group" aria-label="Filtrar por distribuidor"></div>
@@ -166,8 +205,11 @@ footer{max-width:820px;margin:0 auto;padding:0 14px 30px;font-size:11.5px;color:
       <label class="switch"><input type="checkbox" id="onlydual"> Mostrar solo repuestos que están en más de un distribuidor</label>
     </div>
   </div>
-  <div class="fechas" id="fechas"></div>
+  <div class="statusline"><button id="statusbtn" class="statusbtn" aria-controls="fechas"
+    aria-expanded="false"></button></div>
+  <div class="fechas" id="fechas" aria-label="Actualización de las listas"></div>
 </header>
+<div id="resultstatus" class="sr-only" role="status" aria-live="polite"></div>
 <main id="out"></main>
 <footer>Datos extraídos de las listas PDF de HEM Móvil y Max Movil y del catálogo de Canguro. Ante cualquier duda, confirmar con el distribuidor. El precio de venta es calculado con tu margen y no aparece en las listas. Las coincidencias entre distribuidores se detectan por modelo y solo se comparan precios de la misma calidad: verifica las especificaciones antes de comprar.</footer>
 
@@ -315,6 +357,7 @@ function add(o){
   if(/(^|[^a-z])ip [0-9]/.test(o.s)) o.s+=" iphone iph";  // BBB escribe "IP 12"
   if(/(^|[^a-z])sam([^a-z]|$)/.test(o.s)) o.s+=" samsung";
   if(/redmi|poco/.test(o.s)) o.s+=" xiaomi";
+  o.qk=calKey(o.q);
   ITEMS.push(o);
 }
 
@@ -347,7 +390,7 @@ function calCanguro(m){
 CANGURO.forEach(r=>{
   const t=CAN_TIPO[r.sec]||["otros",pretty(r.sec)];
   add({dist:"Canguro",tipo:t[0],c:t[1],m:r.modelo.split(" / ")[0],q:calCanguro(r.modelo),k:"",
-       p:r.precio,b:"",sku:r.sku||"",stock:r.stock});
+       p:r.precio,b:"",skus:r.sku?[String(r.sku)]:[],stock:r.stock});
 });
 
 // Max Movil (id interno BBB). Sus secciones se nombraron igual que las de HEM,
@@ -374,10 +417,22 @@ function modeloBBB(m){
   return m.toUpperCase().replace(/(^| )(C\/M|S\/M)( |$)/g," ")
           .replace(/\s+/g," ").trim();
 }
+// Algunos códigos distintos describen exactamente el mismo artículo y precio.
+// Se conserva una sola oferta visible con todos sus códigos para evitar filas
+// duplicadas sin perder la posibilidad de buscar por cualquiera de ellos.
+const BBB_MERGED=new Map();
+let BBB_DUPLICATES=0;
 BBB.forEach(r=>{
+  const key=[r.sec,r.modelo,r.precio].join("|");
+  if(BBB_MERGED.has(key)){
+    BBB_DUPLICATES++;
+    BBB_MERGED.get(key).codigos.push(String(r.codigo));
+  }else BBB_MERGED.set(key,{...r,codigos:[String(r.codigo)]});
+});
+BBB_MERGED.forEach(r=>{
   const tipo=BBB_TIPO[r.sec]||HEM_TIPO[r.sec]||"otros";
   add({dist:"BBB",tipo,c:pretty(r.sec),m:r.modelo,mk:modeloBBB(r.modelo),
-       q:calBBB(r.modelo),k:"",p:r.precio,b:"",sku:r.codigo||""});
+       q:calBBB(r.modelo),k:"",p:r.precio,b:"",skus:r.codigos});
 });
 
 // ---------- coincidencias entre distribuidores ----------
@@ -443,7 +498,8 @@ DUAL.forEach(g=>{ const v=GRUPO.get(g); DID.forEach(d=>v[d].forEach(i=>nDual.add
 
 // ---------- estado ----------
 const $=id=>document.getElementById(id);
-let tipo="", subcat="", cap=300;
+const PAGE_SIZE=100, PAGE_STEP=150;
+let tipo="", subcat="", cap=PAGE_SIZE;
 const distOn=Object.fromEntries(DID.map(d=>[d,true]));
 const LS=k=>localStorage.getItem("pt."+k), SS=(k,v)=>localStorage.setItem("pt."+k,v);
 if(LS("mg")!==null) $("mg").value=LS("mg");
@@ -451,35 +507,44 @@ if(LS("rd")!==null) $("rd").value=LS("rd");
 if(LS("showv")!==null) $("showv").checked=LS("showv")==="1";
 
 function fmtF(f){const[y,m,d]=f.split(".");return d+"/"+m+"/"+y;}
-function oldF(f){const[y,m,d]=f.split(".");return (Date.now()-new Date(y,m-1,d))/864e5>45;}
+function ageF(f){const[y,m,d]=f.split(".");return Math.floor((Date.now()-new Date(y,m-1,d))/864e5);}
+function oldF(f){return ageF(f)>45;}
 const FLBL={pan:"HEM pantallas",bat:"HEM baterías",flex:"HEM flexibles",car:"HEM carátulas"};
-$("fechas").innerHTML=Object.keys(FLBL).map(k=>
-  `<span class="${oldF(FECHAS[k])?"old":""}" title="Fecha de actualización de la lista">${FLBL[k]} <b>${fmtF(FECHAS[k])}</b></span>`).join("")
-  +`<span class="${oldF(FECHA_CANGURO)?"old":""}" title="Fecha de la captura del catálogo">Canguro <b>${fmtF(FECHA_CANGURO)}</b></span>`
-  +`<span class="${oldF(FECHA_BBB)?"old":""}" title="Fecha de la lista de Max Movil">Max Movil <b>${fmtF(FECHA_BBB)}</b></span>`;
+const SOURCES=Object.keys(FLBL).map(k=>({lbl:FLBL[k],fecha:FECHAS[k],title:"Fecha de actualización de la lista"}))
+  .concat([{lbl:"Canguro",fecha:FECHA_CANGURO,title:"Fecha de la captura del catálogo"},
+           {lbl:"Max Movil",fecha:FECHA_BBB,title:"Fecha más antigua entre sus listas"}]);
+const STALE_SOURCES=SOURCES.filter(s=>oldF(s.fecha));
+$("fechas").innerHTML=SOURCES.map(s=>
+  `<span class="${oldF(s.fecha)?"old":""}" title="${s.title}; hace ${ageF(s.fecha)} días">${esc(s.lbl)} <b>${fmtF(s.fecha)}</b>${oldF(s.fecha)?" · desactualizada":""}</span>`).join("");
+$("statusbtn").textContent=STALE_SOURCES.length
+  ?`${STALE_SOURCES.length} listas desactualizadas · ver fechas`
+  :"Listas actualizadas · ver fechas";
+$("statusbtn").classList.toggle("old",STALE_SOURCES.length>0);
 
-const counts={},countsD={};
-ITEMS.forEach(it=>{ counts[it.tipo]=(counts[it.tipo]||0)+1;
-  countsD[it.tipo]=countsD[it.tipo]||Object.fromEntries(DID.map(d=>[d,0])); countsD[it.tipo][it.dist]++; });
 $("tot").textContent=ITEMS.length.toLocaleString("es")+" repuestos";
 function chipHTML(){
+  const activeCounts={},activeTotal=ITEMS.reduce((n,it)=>{
+    if(!distOn[it.dist]) return n;
+    activeCounts[it.tipo]=(activeCounts[it.tipo]||0)+1;
+    return n+1;
+  },0);
   const mk=(v,l,n)=>`<button class="chip" aria-pressed="${tipo===v}" data-t="${v}">${l}`+
     (n?`<span class="c">${n.toLocaleString("es")}</span>`:"")+`</button>`;
-  $("chips").innerHTML=mk("","Todas",ITEMS.length)+
-    ORDEN_TIPO.filter(t=>counts[t]).map(t=>mk(t,TIPOS[t],counts[t])).join("");
+  $("chips").innerHTML=mk("","Todas",activeTotal)+
+    ORDEN_TIPO.filter(t=>activeCounts[t]).map(t=>mk(t,TIPOS[t],activeCounts[t])).join("");
   $("dists").innerHTML=`<span class="lbl">Distribuidor</span>`+
     DID.map(d=>`<button class="dchip" data-d="${d}" aria-pressed="${distOn[d]}" title="${esc(DNOM[d])}">${esc(DLBL[d])}</button>`).join("");
 }
 chipHTML();
 $("chips").addEventListener("click",e=>{
   const b=e.target.closest(".chip"); if(!b) return;
-  tipo=b.dataset.t; subcat=""; cap=300; chipHTML(); subcatUI(); render();
+  tipo=b.dataset.t; subcat=""; cap=PAGE_SIZE; chipHTML(); subcatUI(); render();
 });
 $("dists").addEventListener("click",e=>{
   const b=e.target.closest(".dchip"); if(!b) return;
   const d=b.dataset.d;
   if(distOn[d] && DID.filter(x=>distOn[x]).length<2) return;  // no apagar el ultimo
-  distOn[d]=!distOn[d]; cap=300; chipHTML(); render();
+  distOn[d]=!distOn[d]; cap=PAGE_SIZE; chipHTML(); render();
 });
 function subcatUI(){
   const sr=$("subrow"), sel=$("subcat");
@@ -490,12 +555,19 @@ function subcatUI(){
     cats.map(c=>`<option>${esc(c)}</option>`).join("");
   sr.style.display="block";
 }
-$("subcat").addEventListener("change",e=>{subcat=e.target.value;cap=300;render();});
+$("subcat").addEventListener("change",e=>{subcat=e.target.value;cap=PAGE_SIZE;render();});
 
-$("gear").addEventListener("click",()=>$("panel").classList.toggle("open"));
+$("gear").addEventListener("click",()=>{
+  const open=$("panel").classList.toggle("open");
+  $("gear").setAttribute("aria-expanded",String(open));
+});
+$("statusbtn").addEventListener("click",()=>{
+  const open=$("fechas").classList.toggle("open");
+  $("statusbtn").setAttribute("aria-expanded",String(open));
+});
 ["mg","rd"].forEach(id=>$(id).addEventListener("input",()=>{SS(id,$(id).value);render();}));
 $("showv").addEventListener("change",()=>{SS("showv",$("showv").checked?"1":"0");render();});
-$("onlydual").addEventListener("change",()=>{cap=300;render();});
+$("onlydual").addEventListener("change",()=>{cap=PAGE_SIZE;render();});
 function venta(p){
   const m=parseFloat($("mg").value)||0, st=parseFloat($("rd").value);
   let v=p*(1+m/100);
@@ -515,7 +587,7 @@ function matchTok(it,t){
   if(!/^[0-9]+$/.test(t)) return it.s.includes(t);
   // El codigo se busca por el final, que es como se dicta o se copia: sirven
   // "00011366" y "11366", pero no un pedazo suelto de la mitad.
-  if(t.length>=4 && it.sku && it.sku.endsWith(t)) return true;
+  if(t.length>=4 && it.skus?.some(s=>s.endsWith(t))) return true;
   let re=RENUM.get(t);
   if(!re){ re=new RegExp("(^|[^0-9])"+t+"([^0-9]|$)"); RENUM.set(t,re); }
   return re.test(it.s);
@@ -557,14 +629,14 @@ function integrityCheck(){
   if(variantKey({tipo:"placa",c:"FPC de placa"})===variantKey({tipo:"placa",c:"Flex de placa"}))
     errors.push("FPC de placa y flex de placa mezclados");
   // El caso real que rompio la busqueda: token "6" contra el iPhone 11 con codigo 00011366.
-  const ej={s:norm("LCD IP 11 GAGETJH iphone iph"),sku:"00011366"};
+  const ej={s:norm("LCD IP 11 GAGETJH iphone iph"),skus:["00011366"]};
   if(matchTok(ej,"6")) errors.push("un numero suelto entra dentro de numeros mas largos");
   if(!matchTok(ej,"11")||!matchTok(ej,"11366")) errors.push("la busqueda no encuentra modelo o codigo");
   for(const [gid,v] of GRUPO){
     const items=DID.flatMap(d=>v[d]);
     if(new Set(items.map(i=>i.variant)).size>1) errors.push("variantes mezcladas: "+gid);
     const porCal=new Map();
-    items.forEach(i=>{const c=calKey(i.q);if(!porCal.has(c))porCal.set(c,[]);porCal.get(c).push(i);});
+    items.forEach(i=>{const c=i.qk;if(!porCal.has(c))porCal.set(c,[]);porCal.get(c).push(i);});
     for(const lista of porCal.values()){
       const ofertas=offersByDistributor(lista);
       if(ofertas.length>1&&ofertas[0].dist===ofertas[ofertas.length-1].dist)
@@ -575,7 +647,8 @@ function integrityCheck(){
 }
 const INTEGRITY_ERRORS=integrityCheck();
 window.__PT_QA=Object.freeze({ok:INTEGRITY_ERRORS.length===0,errors:INTEGRITY_ERRORS,
-  items:ITEMS.length,groups:GRUPO.size,dualGroups:DUAL.size});
+  items:ITEMS.length,rawItems:ITEMS.length+BBB_DUPLICATES,mergedDuplicates:BBB_DUPLICATES,
+  staleSources:STALE_SOURCES.length,groups:GRUPO.size,dualGroups:DUAL.size});
 document.documentElement.dataset.inventoryQa=INTEGRITY_ERRORS.length?"error":"ok";
 document.documentElement.dataset.inventoryQaErrors=String(INTEGRITY_ERRORS.length);
 if(INTEGRITY_ERRORS.length) console.error("Fallo de integridad del inventario",INTEGRITY_ERRORS);
@@ -595,6 +668,8 @@ function itemHTML(it,best){
   if(it.q) det.push(`<span class="badge">${esc(it.q)}</span>`);
   if(it.b) det.push(`<span class="badge">${esc(it.b)}</span>`);
   if(best) det.push(`<span class="badge best">más barato en ${esc(best)}</span>`);
+  if(it.skus?.length) det.push(`<span class="badge sku" title="Código del proveedor">SKU ${it.skus.map(esc).join(" · ")}</span>`);
+  if(Number.isFinite(it.stock)) det.push(`<span class="badge stock" title="Stock informado por el proveedor">Stock ${it.stock}</span>`);
   if(it.k) det.push(esc(it.k.toLowerCase()));
   return `<div class="item"><div class="info"><div class="m">${esc(it.m)}</div>`+
     `<div class="d">${det.join("")}</div></div>`+
@@ -604,14 +679,29 @@ function itemHTML(it,best){
 }
 function render(){
   const q=$("q").value.trim(), res=filtered(), out=$("out");
+  $("resultstatus").textContent=q||tipo||$("onlydual").checked
+    ?`${res.length.toLocaleString("es")} resultados`
+    :`${res.length.toLocaleString("es")} repuestos disponibles`;
+  const focused=Boolean(q||tipo||$("onlydual").checked);
+  document.body.classList.toggle("has-results",focused);
+  if(focused){
+    $("fechas").classList.remove("open");
+    $("statusbtn").setAttribute("aria-expanded","false");
+  }
   if(!q && !tipo && !$("onlydual").checked){
-    out.innerHTML=`<div class="summary">`+ORDEN_TIPO.filter(t=>counts[t]).map(t=>{
-      const d=countsD[t];
-      return `<button class="scard" data-t="${t}"><div class="sn">${counts[t].toLocaleString("es")}</div>`+
+    const summaryCounts={},summaryCountsD={};
+    res.forEach(it=>{
+      summaryCounts[it.tipo]=(summaryCounts[it.tipo]||0)+1;
+      summaryCountsD[it.tipo]=summaryCountsD[it.tipo]||Object.fromEntries(DID.map(d=>[d,0]));
+      summaryCountsD[it.tipo][it.dist]++;
+    });
+    out.innerHTML=`<div class="summary">`+ORDEN_TIPO.filter(t=>summaryCounts[t]).map(t=>{
+      const d=summaryCountsD[t];
+      return `<button class="scard" data-t="${t}"><div class="sn">${summaryCounts[t].toLocaleString("es")}</div>`+
         `<div class="sl">${TIPOS[t]}</div><div class="sd">`+
         DID.map(x=>d[x]?`<span class="badge ${DCLS[x]}">${esc(DLBL[x])} ${d[x]}</span>`:"").join("")+`</div></button>`;
     }).join("")+`</div>`+
-    `<p class="hint">Escribe el modelo del equipo para ver todos sus repuestos en <b>los ${DID.length} distribuidores</b>,<br>`+
+    `<p class="hint">Escribe el modelo del equipo para ver todos sus repuestos en <b>los ${DID.filter(d=>distOn[d]).length} distribuidores activos</b>,<br>`+
     `o toca una categoría para explorarla. <b>${nDual.size.toLocaleString("es")}</b> repuestos aparecen en más de un catálogo.</p>`;
     out.querySelectorAll(".scard").forEach(b=>b.addEventListener("click",()=>{
       tipo=b.dataset.t; chipHTML(); subcatUI(); render(); window.scrollTo({top:0});
@@ -648,7 +738,7 @@ function render(){
       const ganador=new Map();
       if(ambos){
         const porCal=new Map();
-        g.forEach(i=>{ const c=calKey(i.q); if(!porCal.has(c)) porCal.set(c,[]); porCal.get(c).push(i); });
+        g.forEach(i=>{ const c=i.qk; if(!porCal.has(c)) porCal.set(c,[]); porCal.get(c).push(i); });
         for(const [c,lista] of porCal){
           if(new Set(lista.map(i=>i.dist)).size<2) continue;
           // Primero se toma la oferta minima de cada distribuidor. Asi el
@@ -677,10 +767,13 @@ function render(){
   if(shown>=cap && res.length>cap)
     html+=`<button class="more" id="more">Mostrar más (${(res.length-shown).toLocaleString("es")} restantes)</button>`;
   out.innerHTML=html;
-  const mb=$("more"); if(mb) mb.addEventListener("click",()=>{cap+=500;render();});
+  const mb=$("more"); if(mb) mb.addEventListener("click",()=>{cap+=PAGE_STEP;render();});
 }
 let deb;
-$("q").addEventListener("input",()=>{cap=300;clearTimeout(deb);deb=setTimeout(render,120);});
+$("q").addEventListener("input",()=>{
+  cap=PAGE_SIZE; clearTimeout(deb); $("out").setAttribute("aria-busy","true");
+  deb=setTimeout(()=>{render();$("out").setAttribute("aria-busy","false");},120);
+});
 render();
 </script>
 </body>

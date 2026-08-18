@@ -30,7 +30,8 @@ binario explícitamente con `AWK_BIN=/ruta/al/awk bash actualizar.sh`.
 
 1. Reemplazar los PDF de HEM en esta carpeta.
 2. Reemplazar o agregar los PDF de Max Movil en `pdfs-bbb/`. Todo nombre nuevo
-   debe añadirse a `BBB_MAP` en `buscador/actualizar.sh`.
+   debe añadirse a `buscador/datos/bbb_map.txt`. La actualización se aborta si
+   encuentra un PDF sin mapeo o un mapeo cuyo PDF ya no existe.
 3. Actualizar los `buscador/datos/can_*.jsonl` cuando cambie Canguro, y escribir
    la fecha de esa captura en `buscador/datos/fecha_canguro.txt` (AAAA.MM.DD).
    Es un archivo aparte a propósito: la fecha de modificación de los `.jsonl`
@@ -48,6 +49,11 @@ binario explícitamente con `AWK_BIN=/ruta/al/awk bash actualizar.sh`.
    `buscador/.tmp/matches.qa.log`. Diferencias grandes de precio pueden indicar
    una coincidencia incorrecta aun cuando el proceso no reporte un error.
 6. Publicar únicamente el contenido de `para-netlify/`.
+
+`verificar.sh` también valida la estructura y los precios de todos los JSONL,
+la unicidad de códigos/SKU, cantidades mínimas por proveedor y los reportes de
+los parsers. Las cantidades mínimas pueden ajustarse con `MIN_HEM_ITEMS`,
+`MIN_CAN_ITEMS` y `MIN_BBB_ITEMS` cuando exista un cambio legítimo grande.
 
 ## Reglas de comparación
 
@@ -78,4 +84,3 @@ almacenamiento en caché, pero **no son autenticación**. Cualquier persona que
 conozca la URL puede descargar los precios incrustados en el HTML. Si los costos
 deben ser privados, el sitio debe publicarse detrás de control de acceso de
 Netlify u otro proxy autenticado; no se debe confiar solamente en esta carpeta.
-
