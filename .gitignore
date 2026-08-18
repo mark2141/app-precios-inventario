@@ -2,7 +2,7 @@
 Precios/buscador/.tmp/
 
 # Paquete para subir a Netlify: se regenera desde para-netlify/
-Precios/inventario-netlify.zip
+Precios/inventario-netlify*.zip
 
 # Exportación antigua del buscador. Tiene copias divergentes de app_template.html
 # y parse.awk que ya no se mantienen; la fuente canónica es Precios/buscador/.

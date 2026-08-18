@@ -55,6 +55,22 @@ la unicidad de códigos/SKU, cantidades mínimas por proveedor y los reportes de
 los parsers. Las cantidades mínimas pueden ajustarse con `MIN_HEM_ITEMS`,
 `MIN_CAN_ITEMS` y `MIN_BBB_ITEMS` cuando exista un cambio legítimo grande.
 
+Los avisos de extracción abortan la actualización a propósito: publicar medio
+inventario es peor que no publicarlo. Cuando los avisos son cosméticos y hay que
+actualizar igual, ambos scripts aceptan `PERMITIR_PROBLEMAS=1`:
+
+```bash
+PERMITIR_PROBLEMAS=1 bash actualizar.sh
+PERMITIR_PROBLEMAS=1 bash verificar.sh
+```
+
+La válvula no cubre los fallos estructurales (un PDF sin mapeo o sin fecha):
+esos hacen desaparecer una categoría entera y hay que corregirlos de verdad.
+
+`MAX_PRECIO` (500 por omisión) es el tope de precio plausible y lo comparten los
+dos parsers y el validador. Si se separan, un precio mal leído se descarta en el
+parser sin que el validador llegue a verlo.
+
 ## Reglas de comparación
 
 Una comparación requiere coincidencia de:

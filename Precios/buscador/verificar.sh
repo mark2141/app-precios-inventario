@@ -46,7 +46,8 @@ for f in "$DIR"/datos/can_*.jsonl "$DIR"/.tmp/bat.jsonl "$DIR"/.tmp/pan.jsonl \
     */.tmp/bbb/bbb.jsonl) check_id=1; check_dup=1;;
   esac
   "$AWK_BIN" -v LABEL="$(basename "$f")" -v CHECK_ID="$check_id" \
-    -v CHECK_SEMANTIC_DUP="$check_dup" -f "$DIR/validar_jsonl.awk" "$f"
+    -v CHECK_SEMANTIC_DUP="$check_dup" -v MAX_PRICE="${MAX_PRECIO:-500}" \
+    -f "$DIR/validar_jsonl.awk" "$f"
 done
 
 HEM_TOTAL=$(wc -l < "$DIR/.tmp/bat.jsonl")
@@ -57,16 +58,22 @@ BBB_TOTAL=$(wc -l < "$DIR/.tmp/bbb/bbb.jsonl")
 [ "$CAN_TOTAL" -ge "${MIN_CAN_ITEMS:-500}" ] || { echo "Caída anormal de Canguro: $CAN_TOTAL items" >&2; exit 1; }
 [ "$BBB_TOTAL" -ge "${MIN_BBB_ITEMS:-3000}" ] || { echo "Caída anormal de Max Movil: $BBB_TOTAL items" >&2; exit 1; }
 
-for f in "$DIR"/.tmp/{bat,pan,car,flex}.qa.log; do
-  if grep -vE '(^META|ANEXADO|^$)' "$f" | grep -q .; then
-    echo "El parser reportó problemas en $f" >&2; exit 1
-  fi
-done
-for f in "$DIR"/.tmp/bbb/*.qa.log; do
-  if grep -vE '(^META|SIN ESPACIADO|PRECIO CERO|^$)' "$f" | grep -q .; then
-    echo "El parser reportó problemas en $f" >&2; exit 1
-  fi
-done
+# Se respeta la misma valvula que actualizar.sh: si no, permitir un aviso alla
+# solo trasladaria el bloqueo a aqui.
+if [ "${PERMITIR_PROBLEMAS:-0}" = "1" ]; then
+  echo "PERMITIR_PROBLEMAS=1: no se revisan los avisos de los parsers." >&2
+else
+  for f in "$DIR"/.tmp/{bat,pan,car,flex}.qa.log; do
+    if grep -vE '(^META|ANEXADO|^$)' "$f" | grep -q .; then
+      echo "El parser reportó problemas en $f" >&2; exit 1
+    fi
+  done
+  for f in "$DIR"/.tmp/bbb/*.qa.log; do
+    if grep -vE '(^META|SIN ESPACIADO|PRECIO CERO|^$)' "$f" | grep -q .; then
+      echo "El parser reportó problemas en $f" >&2; exit 1
+    fi
+  done
+fi
 
 grep -q '<meta charset="utf-8">' "$DIR/buscador.html"
 grep -q 'window.__PT_QA' "$DIR/buscador.html"

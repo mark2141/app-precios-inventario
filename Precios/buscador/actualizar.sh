@@ -32,6 +32,16 @@ if pdftotext -h 2>&1 | grep -q -- '-table'; then PDF_TABLE_OPT=-table
 else PDF_TABLE_OPT=-layout
 fi
 
+# Tope de precio plausible, compartido por los dos parsers y por el validador.
+MAX_PRECIO="${MAX_PRECIO:-500}"
+# Los avisos de extraccion abortan la actualizacion a proposito: publicar medio
+# inventario es peor que no publicarlo. Pero un aviso cosmetico no puede dejar
+# al taller sin poder actualizar precios un sabado, asi que hay valvula:
+#   PERMITIR_PROBLEMAS=1 bash actualizar.sh
+# No cubre los fallos estructurales (PDF sin mapeo o sin fecha): esos hacen
+# desaparecer una categoria entera y hay que arreglarlos de verdad.
+PERMITIR_PROBLEMAS="${PERMITIR_PROBLEMAS:-0}"
+
 SEC_BAT="IPHONE|NOKIA|XIAOMI|HUAWEI|HONOR|SAMSUNG|LG|REALME|TECNO|TABLET|IPH ORIGINAL(CONDICIÓN DE BATERÍA)"
 SEC_PAN="PANTALLA COMPLETA|PANTALLA SOLA|PANTALLA DE TABLET|LISTA DE PRECIO DE TACTIL|LISTA DE PRECIO DE MEMORIA"
 SEC_CAR="CARATULA|TAPA"
@@ -40,13 +50,21 @@ SEC_FLEX="AURICULAR|BANDEJA DE CHIP|BOTÓN FÍSICO DE POWER Y VOLUMEN|BUZZER/TIM
 extrae() { # $1=pdf  $2=clave  $3=secciones
   local pdf="$PDFS/$1" key="$2" sec="$3"
   pdftotext "$PDF_TABLE_OPT" -enc UTF-8 "$pdf" "$TMP/$key.txt"
-  "$AWK_BIN" -v SECTIONS="$sec" -f "$DIR/parse.awk" "$TMP/$key.txt" > "$TMP/$key.jsonl" 2> "$TMP/$key.qa.log"
+  "$AWK_BIN" -v SECTIONS="$sec" -v MAX_PRICE="$MAX_PRECIO" -f "$DIR/parse.awk" "$TMP/$key.txt" > "$TMP/$key.jsonl" 2> "$TMP/$key.qa.log"
   grep -q '^META FECHA ' "$TMP/$key.qa.log" || {
     echo "La lista HEM $pdf no contiene una fecha reconocible." >&2; exit 1
   }
   local prob; prob=$(grep -cvE '^META|ANEXADO' "$TMP/$key.qa.log" || true)
   echo "  HEM $key: $(wc -l < "$TMP/$key.jsonl") repuestos, $prob problemas (ver $TMP/$key.qa.log)"
-  [ "$prob" -eq 0 ] || { echo "Se aborta por problemas de extracción en HEM $key." >&2; exit 1; }
+  if [ "$prob" -ne 0 ]; then
+    if [ "$PERMITIR_PROBLEMAS" = "1" ]; then
+      echo "    (PERMITIR_PROBLEMAS=1: se continúa pese a $prob problema(s))"
+    else
+      echo "Se aborta por problemas de extracción en HEM $key." >&2
+      echo "Revisa $TMP/$key.qa.log; si los avisos son aceptables, repite con PERMITIR_PROBLEMAS=1." >&2
+      exit 1
+    fi
+  fi
 }
 
 echo "Extrayendo listas de HEM Movil..."
@@ -80,7 +98,7 @@ for pdf in "$PDFS"/pdfs-bbb/*.pdf; do
   # recuperar espacios. Si Poppler no ofrece -table, -layout cumple ambos roles.
   pdftotext -layout -enc UTF-8 "$pdf" "$TB/$b.lay.txt"
   pdftotext "$PDF_TABLE_OPT" -enc UTF-8 "$pdf" "$TB/$b.tab.txt"
-  "$AWK_BIN" -v SEC="$sec" -f "$DIR/parse_bbb.awk" "$TB/$b.lay.txt" "$TB/$b.tab.txt" \
+  "$AWK_BIN" -v SEC="$sec" -v MAX_PRICE="$MAX_PRECIO" -f "$DIR/parse_bbb.awk" "$TB/$b.lay.txt" "$TB/$b.tab.txt" \
     > "$TB/$b.jsonl" 2> "$TB/$b.qa.log"
   if ! grep -q '^META FECHA ' "$TB/$b.qa.log"; then
     echo "  !! SIN FECHA reconocible: $b"
@@ -98,10 +116,15 @@ done
   echo "Se aborta la actualización: hay $BBB_SIN_FECHA PDF(s) de Max Movil sin fecha." >&2
   exit 1
 }
-[ "$BBB_PROBLEMAS" -eq 0 ] || {
-  echo "Se aborta la actualización: Max Movil reportó $BBB_PROBLEMAS problema(s) de extracción." >&2
-  exit 1
-}
+if [ "$BBB_PROBLEMAS" -ne 0 ]; then
+  if [ "$PERMITIR_PROBLEMAS" = "1" ]; then
+    echo "  (PERMITIR_PROBLEMAS=1: se continúa pese a $BBB_PROBLEMAS problema(s))"
+  else
+    echo "Se aborta la actualización: Max Movil reportó $BBB_PROBLEMAS problema(s) de extracción." >&2
+    echo "Revisa $TB/*.qa.log; si los avisos son aceptables, repite con PERMITIR_PROBLEMAS=1." >&2
+    exit 1
+  fi
+fi
 cat "$TB"/*.jsonl > "$TB/bbb.jsonl" 2>/dev/null || : > "$TB/bbb.jsonl"
 # Se usa la fecha mas antigua entre todas las listas: una sola lista vieja debe
 # hacer que el estado global de Max Movil se considere viejo.

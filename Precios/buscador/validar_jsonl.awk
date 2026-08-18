@@ -22,7 +22,10 @@ function number_field(line, name,   marker, rest) {
 
 BEGIN {
   if (LABEL == "") LABEL = FILENAME
-  MAX_PRICE = (MAX_PRICE == "" ? 1000 : MAX_PRICE)
+  # Mismo tope que parse.awk y parse_bbb.awk: si el validador aceptara mas de
+  # lo que el parser deja pasar, un precio mal leido se descartaria en silencio
+  # sin que esta comprobacion llegara a verlo nunca.
+  MAX_PRICE = (MAX_PRICE == "" ? 500 : MAX_PRICE + 0)
 }
 
 {
